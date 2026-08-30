@@ -1,0 +1,15 @@
+name: invexapi-dev
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python>=3.10
+  - pytorch>=2.0
+  - numpy
+  - scipy
+  - pywavelets
+  - imageio
+  - pillow
+  - matplotlib
+  - pytest
+  - pip

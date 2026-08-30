@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "invexapi"
+version = "0.1.0"
+description = "PyTorch Optimizers and Neural Network building blocks for Invex Results."
+readme = "README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+authors = [{ name = "Samuel Pinilla", email = "spinilla@ieee.org" }]
+requires-python = ">=3.10"
+dependencies = ["torch>=2.0"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "numpy"]
+examples = ["numpy", "scipy", "pywavelets", "imageio", "pillow", "matplotlib"]
+
+[project.urls]
+Homepage = "https://github.com/samuelpinilla/invexapi"
+
+[tool.hatch.build.targets.wheel]
+packages = ["invexapi"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
