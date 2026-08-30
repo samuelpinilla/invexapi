@@ -1,3 +1,5 @@
+from importlib.metadata import version as _version
+
 from . import metadata, nn, optim, penalties
 from .certificate import Certificate
 from .metadata import DesignDecision, Invariant, Provenance
@@ -18,7 +20,7 @@ from .penalties import (
     Verifier,
 )
 
-__version__ = "0.1.0"
+__version__ = _version("invexapi")
 
 __all__ = [
     "optim",
