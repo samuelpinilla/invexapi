@@ -18,7 +18,7 @@ __all__ = ["Solver"]
             rejected="a fully unified constructor signature across all solvers",
             rationale=(
                 "GradientDescent/NonlinearCG take a single duck-typed objective "
-                "while FISTA takes smooth+penalty — a real shape difference, not "
+                "while FISTA takes smooth+penalty - a real shape difference, not "
                 "incidental duplication to force into one signature"
             ),
         )

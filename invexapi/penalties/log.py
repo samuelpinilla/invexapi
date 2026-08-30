@@ -46,7 +46,7 @@ def _cbrt(v: torch.Tensor) -> torch.Tensor:
 class LogInvexPenalty(Penalty):
     """Invex penalty ``g(x) = log(1+|x|) - |x|/(2+2|x|)``.
 
-    Only takes ``lamb`` — this penalty's shape is fixed (no ``q``-like parameter).
+    Only takes ``lamb`` - this penalty's shape is fixed (no ``q``-like parameter).
     """
 
     def __init__(self, lamb: float):

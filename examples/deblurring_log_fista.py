@@ -1,23 +1,12 @@
 """1D deblurring with the log invex penalty, via FISTA.
 
-Adapted from the FISTA/momentum deblurring loop in
-``codes NEURIPS/model-based/modelEq10.py`` (DCT-domain deconvolution + invex prox on
-wavelet coefficients), simplified to a synthetic 1D blur/sparse signal so the example
-needs no external image files, ``pywt``, or ``scipy`` — just ``invexapi`` and
-``torch``. The structure (smooth data-fidelity gradient step + invex prox step, run
-through FISTA) mirrors the paper's pipeline exactly; only the transform (identity here
-vs. DCT+wavelet there) is simplified, so the log penalty's prox stays exact rather
-than approximated.
-
-Problem: recover a sparse signal ``x_true`` from a blurred, noisy observation
+Recovers a sparse signal ``x_true`` from a blurred, noisy observation
 ``y = A x_true + noise`` (A = box blur), minimizing ``0.5*||Ax-y||^2 + lamb*g(x)``
-where ``g`` is the log invex penalty from ``codes NEURIPS/model-based/modelEq10.py``.
+where ``g`` is the log invex penalty.
 
 Running this script still prints FISTA's UserWarning: the data-fidelity term alone
 is certified convex, but the *combined* objective isn't (see
-``invexapi.penalties.Sum`` — certificates never compose automatically), so the
-global-optimum guarantee is still withheld here even though half the objective is
-provably well-behaved.
+``invexapi.penalties.Sum`` - certificates never compose automatically).
 """
 
 import torch
@@ -36,12 +25,8 @@ def _blur_matrix(n: int, width: int = 5) -> torch.Tensor:
 
 
 class _DataFidelity(Loss):
-    """0.5*||Ax-y||^2. A@x is linear, so this quadratic is convex by inspection —
-    certified here (with no paper reference, since it's not from the source
-    papers) to show a Loss outside invexapi.penalties declaring its own certificate.
-    This does NOT silence FISTA's warning below: the *combined* smooth+penalty
-    objective (invexapi.penalties.Sum) still has no certificate of its own, by
-    design (see Sum's docstring) — only smooth's half is certified here."""
+    """0.5*||Ax-y||^2. Convex by inspection (A@x is linear), certified here to show
+    a Loss outside invexapi.penalties declaring its own certificate."""
 
     def __init__(self, A: torch.Tensor, y: torch.Tensor):
         super().__init__()

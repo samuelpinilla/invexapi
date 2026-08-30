@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "invexapi"
-version = "0.1.0"
+version = "0.1.1"
 description = "PyTorch Optimizers and Neural Network building blocks for Invex Results."
 readme = "README.md"
 license = "BSD-3-Clause"
@@ -21,7 +21,7 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = ["pytest", "numpy"]
-examples = ["numpy", "scipy", "pywavelets", "imageio", "pillow", "matplotlib"]
+examples = ["numpy", "scipy", "pywavelets", "imageio", "pillow", "matplotlib", "torchvision"]
 
 [project.urls]
 Homepage = "https://github.com/samuelpinilla/invexapi"

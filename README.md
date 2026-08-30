@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="imgs/logo.png" alt="InvexAPI" width="480">
+  <img src="https://raw.githubusercontent.com/samuelpinilla/invexapi/main/imgs/logo.png" alt="InvexAPI" width="480">
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="License: BSD-3-Clause" src="https://img.shields.io/badge/license-BSD--3--Clause-blue.svg"></a>
+  <a href="https://github.com/samuelpinilla/invexapi/blob/main/LICENSE"><img alt="License: BSD-3-Clause" src="https://img.shields.io/badge/license-BSD--3--Clause-blue.svg"></a>
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-blue.svg">
   <img alt="PyTorch only" src="https://img.shields.io/badge/backend-PyTorch-ee4c2c.svg">
 </p>
@@ -22,7 +22,7 @@
 Invex functions are a strict generalization of convexity: every stationary point
 is still a global minimum, but the function itself need not be convex. That gives
 non-convex penalties (sparsity-promoting, non-smooth, highly structured) the same
-global-optimality guarantee convex optimization enjoys — without paying for it
+global-optimality guarantee convex optimization enjoys - without paying for it
 with local minima.
 
 `invexapi` packages this idea as code: penalties that carry a machine-checkable
@@ -59,12 +59,12 @@ x_hat, history = solver.run(y.clone())
 ```
 
 Any object exposing the right methods (`value`, `grad`, `prox`) works as a
-`smooth`/`penalty`/`objective` — the built-in penalties are just one plug-in
+`smooth`/`penalty`/`objective` - the built-in penalties are just one plug-in
 choice.
 
 ## What's inside
 
-**Penalties** (`invexapi.penalties`) — loss/penalty terms plus a certificate of
+**Penalties** (`invexapi.penalties`) - loss/penalty terms plus a certificate of
 what's provably known about each one:
 
 | Penalty | Form | Certified as |
@@ -74,24 +74,24 @@ what's provably known about each one:
 | `TikhonovPenalty(lamb)` | `λ/2·‖x‖²` | convex, invex, quasi-convex |
 | `L1Penalty(lamb)` | `λ·‖x‖₁` | convex, invex, quasi-convex |
 
-Certificates are attached explicitly and never inferred — convexity composes
+Certificates are attached explicitly and never inferred - convexity composes
 additively, but invexity does not, so a combined objective only carries a
 certificate someone has actually proven for it.
 
-**Solvers** (`invexapi.optim`) — generic, decoupled from the penalties above:
+**Solvers** (`invexapi.optim`) - generic, decoupled from the penalties above:
 
-- `GradientDescent` — with optional Armijo backtracking line search
-- `FISTA` — accelerated proximal gradient for `smooth(x) + penalty(x)`
-- `NonlinearCG` — Polak-Ribière+ with automatic restart
-- `LinearizedADMM` — for `smooth(x) + penalty(D@x)` (e.g. total variation)
+- `GradientDescent` - with optional Armijo backtracking line search
+- `FISTA` - accelerated proximal gradient for `smooth(x) + penalty(x)`
+- `NonlinearCG` - Polak-Ribière+ with automatic restart
+- `LinearizedADMM` - for `smooth(x) + penalty(D@x)` (e.g. total variation)
 
 All four warn (never error) when run on an objective without a convex/invex
 certificate, since no global-optimum guarantee applies in that case.
 
-**Linear operators** (`invexapi.penalties.operators`) — `Identity` and
+**Linear operators** (`invexapi.penalties.operators`) - `Identity` and
 `FiniteDifference2D` (2D total variation), each with a verified adjoint.
 
-**Structured documentation** (`invexapi.metadata`) — design provenance,
+**Structured documentation** (`invexapi.metadata`) - design provenance,
 rejected alternatives, and invariants as introspectable dataclasses rather than
 prose, exportable as JSON for downstream tooling:
 
@@ -102,7 +102,7 @@ print(invexapi.metadata.dump_all_json(indent=2))
 
 ## GPU support
 
-Nothing in `invexapi` is device-specific — every operation derives its device
+Nothing in `invexapi` is device-specific - every operation derives its device
 from its input tensors. Move your data to CUDA before calling a solver and
 everything downstream follows:
 
@@ -132,7 +132,7 @@ python examples/data/download.py
 
 ## License
 
-BSD 3-Clause, see [LICENSE](LICENSE).
+BSD 3-Clause, see [LICENSE](https://github.com/samuelpinilla/invexapi/blob/main/LICENSE).
 
 ## References
 

@@ -1,6 +1,6 @@
 """Shared image-loading helper for the examples/ scripts that use real data.
 
-Not part of the invexapi package — a plain sibling module the example scripts
+Not part of the invexapi package - a plain sibling module the example scripts
 import from each other, kept out of invexapi/ since loading/normalizing a test
 image is an examples-only concern, not a library concern.
 """

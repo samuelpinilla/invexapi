@@ -1,8 +1,8 @@
-from . import metadata, optim, penalties
+from . import metadata, nn, optim, penalties
+from .certificate import Certificate
 from .metadata import DesignDecision, Invariant, Provenance
 from .optim import LinearizedADMM
 from .penalties import (
-    Certificate,
     FiniteDifference2D,
     Identity,
     L1Penalty,
@@ -24,6 +24,7 @@ __all__ = [
     "optim",
     "penalties",
     "metadata",
+    "nn",
     "Loss",
     "Penalty",
     "Certificate",

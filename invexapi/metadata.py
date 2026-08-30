@@ -88,7 +88,7 @@ def documented(
     :class:`invexapi.penalties.Certificate`, which genuinely can vary per instance).
 
     ``example``, if given, is a zero-argument callable building a representative
-    instance purely so :func:`dump_all` can read its ``Certificate``s — only
+    instance purely so :func:`dump_all` can read its ``Certificate``s - only
     meaningful for classes (e.g. concrete ``Penalty``s) whose certificates don't
     depend on constructor arguments.
     """

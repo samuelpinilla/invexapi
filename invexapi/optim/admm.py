@@ -31,7 +31,7 @@ __all__ = ["LinearizedADMM"]
             rejected="calling it ADMM (unqualified)",
             rationale=(
                 "the x-update is a single relaxed/extrapolated gradient step, not "
-                "an exact ADMM subproblem solve — Linearized ADMM is a real, "
+                "an exact ADMM subproblem solve - Linearized ADMM is a real, "
                 "published variant name; calling it plain ADMM would imply a "
                 "stronger per-iteration guarantee than this implementation gives"
             ),
@@ -51,7 +51,7 @@ __all__ = ["LinearizedADMM"]
         Invariant(
             "the primal residual used for the stopping criterion and the dual "
             "update must be computed from the NEWLY updated z, not the z from "
-            "before this iteration's prox step — using the old z is trivially "
+            "before this iteration's prox step - using the old z is trivially "
             "zero whenever x0 already minimizes smooth alone (e.g. x0=y for "
             "0.5||x-y||^2), causing a spurious immediate 'convergence'."
         )
@@ -70,7 +70,7 @@ class LinearizedADMM(Solver):
     stacks a vertical and horizontal gradient field). ``D`` defaults to
     :class:`~invexapi.penalties.operators.Identity`. ``project``, if given, is
     applied to ``x`` after every update (e.g. ``lambda x: x.clamp(min=0)`` for
-    natural-image pixel constraints, matching the source scripts) — defaulting to
+    natural-image pixel constraints, matching the source scripts) - defaulting to
     no projection, since forcing non-negativity isn't appropriate for a general
     solver.
     """
@@ -97,7 +97,7 @@ class LinearizedADMM(Solver):
     def run(self, x0: torch.Tensor):
         # Sum (used by FISTA) assumes smooth and penalty share x's domain; here
         # penalty operates on D@x, generally a different shape, so there is no
-        # single combined object to check — warn on each half separately instead.
+        # single combined object to check - warn on each half separately instead.
         self._warn_if_unproven(self.smooth, "smooth")
         self._warn_if_unproven(self.penalty, "penalty")
 

@@ -76,7 +76,7 @@ def test_fista_does_not_warn_once_combined_is_manually_certified():
     penalty = TikhonovPenalty(lamb=0.1)
     solver = FISTA(smooth, penalty, step=0.5, max_iter=5)
 
-    # Both parts are convex, and convexity DOES compose additively — a human
+    # Both parts are convex, and convexity DOES compose additively - a human
     # verifying that fact for this specific combined objective attaches it here,
     # rather than the library ever inferring it automatically (see Sum's docstring).
     solver.combined._certify("convex", smooth.convex)

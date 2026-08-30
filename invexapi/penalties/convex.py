@@ -23,7 +23,7 @@ _CONVEXITY_REFERENCE = Reference(
             rejected="certifying only convex and leaving invex/quasi_convex unset",
             rationale=(
                 "convexity unconditionally implies both invexity (every convex "
-                "function is invex — Hanson's invexity definition reduces to "
+                "function is invex - Hanson's invexity definition reduces to "
                 "standard convexity when its eta map is the identity) and "
                 "quasi-convexity (convex sublevel sets follow directly from "
                 "convexity); quasi_invex needs no separate certificate since Loss "

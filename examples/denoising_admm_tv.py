@@ -1,22 +1,8 @@
 """Total-variation image denoising via LinearizedADMM, on a real test image.
 
-Adapted from ``code_ICLR/ADMM/ADMM_Lq.py``: TV-regularized denoising
-(``min_x 0.5*||x-y||^2 + lamb*sum(|Dx|^q)``) where ``D`` is the 2D finite-difference
-(TV) operator and the penalty is the quasinorm invex penalty already implemented in
-this library — same configuration as the reference script, run here with
-``LinearizedADMM`` + ``FiniteDifference2D`` + ``QuasinormInvexPenalty`` instead of
-the reference's cupy/CUDA kernel, on ``examples/data/images/noisy_image.tif``
-instead of the reference's own test image.
-
-Running this script prints FISTA/GD/CG's usual UserWarning-style caveat: `smooth`
-here (this example's own `_DataFidelity`) is uncertified, so LinearizedADMM warns
-that no global-optimum guarantee applies — expected, same as the other examples.
-
-Runs on CUDA automatically if available (``python examples/denoising_admm_tv.py``),
-or force CPU with ``--device cpu``. Nothing in invexapi is device-specific — every
-op inherits its device from its input tensors — so the only thing this script does
-for GPU support is move the image tensor to the target device before construction;
-everything downstream (the penalty's prox, the TV operator, the solver) follows.
+TV-regularized denoising (``min_x 0.5*||x-y||^2 + lamb*sum(|Dx|^q)``) where ``D``
+is the 2D finite-difference (TV) operator and the penalty is the quasinorm invex
+penalty. Runs on CUDA automatically if available, or force CPU with ``--device cpu``.
 """
 
 import argparse

@@ -3,7 +3,7 @@
 Same setup as ``denoising_admm_tv.py`` (``min_x 0.5*||x-y||^2 + lamb*g(Dx)`` via
 ``LinearizedADMM`` + ``FiniteDifference2D`` on
 ``examples/data/images/noisy_image.tif``), but with ``g`` = ``LogInvexPenalty``
-instead of ``QuasinormInvexPenalty`` — the reference ADMM scripts only pair TV with
+instead of ``QuasinormInvexPenalty`` - the reference ADMM scripts only pair TV with
 the quasinorm/L1/Llq penalties, so there is no original CUDA kernel to validate
 this specific combination against; it demonstrates that any `Penalty` (paper-sourced
 or not) works as `LinearizedADMM`'s second argument, per its generic `penalty.prox`

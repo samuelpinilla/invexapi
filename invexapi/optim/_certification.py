@@ -13,7 +13,7 @@ from ..metadata import DesignDecision, documented
             rationale=(
                 "optimizers stay duck-typed throughout this library; an object with "
                 "no invex/convex attributes at all is treated identically to a Loss "
-                "with those attributes set to None — no certificate either way"
+                "with those attributes set to None - no certificate either way"
             ),
         )
     ],
@@ -22,7 +22,7 @@ def warn_if_unproven(obj, label: str) -> None:
     """Warn if ``obj`` carries no certificate backing a global-optimum claim."""
     if getattr(obj, "invex", None) is None and getattr(obj, "convex", None) is None:
         warnings.warn(
-            f"{label} carries no convex/invex certificate — convergence to a "
+            f"{label} carries no convex/invex certificate - convergence to a "
             "global optimum is not guaranteed.",
             stacklevel=3,
         )

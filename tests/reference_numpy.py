@@ -1,10 +1,6 @@
 """Direct NumPy transcriptions of the original CUDA kernels, kept close enough to
-the source to eyeball-diff against it. No cupy/CUDA anywhere — used only to check
+the source to eyeball-diff against it. No cupy/CUDA anywhere - used only to check
 the PyTorch implementation against the paper's exact reference math.
-
-Quasinorm kernel source: codes JMLR/unrolling/Eq11/Eq11.py and the byte-identical
-codes NEURIPS/unrolling/Eq6/Eq6.py (``invex2D_kernel`` / ``gradG``).
-Log kernel source: codes NEURIPS/model-based/modelEq10.py (``invex2D_kernel``).
 """
 
 import numpy as np

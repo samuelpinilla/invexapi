@@ -1,18 +1,11 @@
 """Sparse-signal denoising with the quasinorm invex penalty.
 
-Adapted from the fixed-point structure of ``codes NEURIPS/denoising/denoisingEq6.py``
-(dictionary-learning + patchwise invex filtering), simplified to a single synthetic
-sparse signal so the example is self-contained and needs no external image files or
-extra dependencies beyond ``invexapi`` itself.
-
-Problem: recover a sparse ``x_true`` from noisy observations ``y = x_true + noise``
-by minimizing ``0.5*||x-y||^2 + lamb*|x|^q`` with FISTA — the invex quasinorm prox
-plays the role of the denoiser (like the paper's per-patch ``invex2DFilter`` step).
+Recovers a sparse ``x_true`` from noisy observations ``y = x_true + noise`` by
+minimizing ``0.5*||x-y||^2 + lamb*|x|^q`` with FISTA - the invex quasinorm prox
+plays the role of the denoiser.
 
 Running this script prints a UserWarning: nobody has certified the combined
-data-fidelity+penalty objective as convex/invex (see
-``invexapi.penalties.Sum``), so FISTA can't claim a global-optimum guarantee here —
-that's the intended, honest behavior, not a bug.
+data-fidelity+penalty objective as convex/invex (see ``invexapi.penalties.Sum``).
 """
 
 import torch
@@ -22,9 +15,7 @@ from invexapi.optim import FISTA
 
 
 class _DataFidelity(Loss):
-    """0.5*||x-y||^2. Left uncertified on purpose (see module docstring) — running
-    this example demonstrates FISTA's warning firing for an objective nobody has
-    proven a global-optimum guarantee for."""
+    """0.5*||x-y||^2. Left uncertified on purpose (see module docstring)."""
 
     def __init__(self, y: torch.Tensor):
         super().__init__()

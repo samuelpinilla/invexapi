@@ -6,7 +6,7 @@ from invexapi.optim import FISTA, GradientDescent, NonlinearCG
 
 # _Quadratic below carries no certificate, and QuasinormInvexPenalty/LogInvexPenalty
 # only certify `invex` (never re-derived for the combined FISTA objective, see
-# invexapi.penalties.Sum) — every solver.run() call in this file is expected to warn
+# invexapi.penalties.Sum) - every solver.run() call in this file is expected to warn
 # that no global-optimum guarantee applies, which these tests assert explicitly
 # rather than letting print to stderr silently.
 
