@@ -36,9 +36,6 @@ _CONVEXITY_REFERENCE = Reference(
 )
 class TikhonovPenalty(Penalty):
     """Convex L2 (Tikhonov/ridge) penalty ``g(x) = lamb/2 * ||x||^2``.
-
-    Included as a non-invex example proving the certificate taxonomy isn't
-    invex-only.
     """
 
     def __init__(self, lamb: float):
