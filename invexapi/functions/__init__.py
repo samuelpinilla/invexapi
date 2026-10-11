@@ -8,9 +8,17 @@ Use :func:`catalog` to list functions by certified class.
 
 from .catalog import catalog
 from .combinators import Composed, LinearTilt, Max, Sum
-from .fidelity import SlackAmplitudeLeastSquares
+from .fidelity import (
+    AdaptiveRobustLoss,
+    CauchyLoss,
+    GemanMcClureLoss,
+    SlackAmplitudeLeastSquares,
+    SquaredLogMinusRationalLoss,
+    WelschLoss,
+)
 from .separable import (
     L1Penalty,
+    LLqPenalty,
     LogMinusRationalPenalty,
     LogPenalty,
     QuasinormInvexPenalty,
@@ -22,11 +30,17 @@ __all__ = [
     "catalog",
     "L1Penalty",
     "LogPenalty",
+    "LLqPenalty",
     "LogMinusRationalPenalty",
     "QuasinormInvexPenalty",
     "TikhonovPenalty",
     "PSDTracePenalty",
     "SlackAmplitudeLeastSquares",
+    "CauchyLoss",
+    "GemanMcClureLoss",
+    "WelschLoss",
+    "AdaptiveRobustLoss",
+    "SquaredLogMinusRationalLoss",
     "Sum",
     "Composed",
     "Max",

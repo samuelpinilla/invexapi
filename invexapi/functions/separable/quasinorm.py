@@ -20,8 +20,9 @@ _PROX_PROVENANCE = Provenance(
     description=(
         "proximal operator of lamb*|x|^q solved by the paper's fixed-point "
         "iteration (4 steps from the midpoint of [beta, |x|]) with its "
-        "thresholds tol/beta/tau, and the paper's closed-form gradient of the "
-        "prox with respect to x and lamb"
+        "thresholds tol/beta/tau; the backward is the exact implicit-function "
+        "gradient at the output (the paper's kernel gradient is a first-order "
+        "approximation of it, evaluated at the input)"
     ),
     reference=_INVEXITY_REFERENCE,
 )
@@ -39,19 +40,24 @@ def _beta(lamb: torch.Tensor, q: float) -> torch.Tensor:
     provenance=[_PROX_PROVENANCE],
     decisions=[
         DesignDecision(
-            choice="custom analytic torch.autograd.Function backward",
-            rejected="plain autograd through the 4-step Newton fixed-point loop in forward",
+            choice="custom torch.autograd.Function with the exact implicit-function backward",
+            rejected=(
+                "plain autograd through the 4-step fixed-point loop, or the paper "
+                "kernel's gradient 1 - lamb*q*(q-1)*|x|^(q-2) at the input"
+            ),
             rationale=(
-                "the closed-form gradient of the prox avoids autograd having to save "
-                "every iteration's activations to backpropagate through the loop"
+                "the implicit gradient needs no saved iterations and is the true "
+                "derivative of the prox; the kernel's formula is only its first-order "
+                "approximation, and also returned nonzero gradients for inputs the prox "
+                "thresholded to zero"
             ),
         )
     ],
     invariants=[
         Invariant(
-            "any change to the forward fixed-point solve must have a matching "
-            "change to backward's analytic gradient formula, or the two will "
-            "silently diverge (there is no autograd check tying them together)."
+            "backward assumes forward returns a stationary point of the prox "
+            "objective (or 0); tests check it with gradcheck away from the threshold, "
+            "where the 4-step forward is converged"
         )
     ],
 )
@@ -60,7 +66,6 @@ class _QuasinormProx(torch.autograd.Function):
 
     @staticmethod
     def forward(ctx, x: torch.Tensor, lamb: torch.Tensor, q: float) -> torch.Tensor:
-        ctx.save_for_backward(x, lamb)
         ctx.q = q
 
         absx = x.abs()
@@ -78,28 +83,30 @@ class _QuasinormProx(torch.autograd.Function):
         y = torch.where(absx == tau, sign * beta, sign * z)
         y = torch.where((absx < tau) | (absx < beta), torch.zeros_like(y), y)
         y = torch.where(absx >= tol, y, torch.zeros_like(y))
+        ctx.save_for_backward(y, lamb)
         return y
 
     @staticmethod
     def backward(ctx, grad_y: torch.Tensor):
-        x, lamb = ctx.saved_tensors
+        # Implicit function theorem at the output: y solves lamb*q*|y|^(q-1) + |y| = |x|,
+        # so d|y|/d|x| = 1/D and d|y|/dlamb = -q|y|^(q-1)/D, D = 1 + lamb*q*(q-1)*|y|^(q-2);
+        # zero wherever the prox thresholded y to 0.
+        y, lamb = ctx.saved_tensors
         q = ctx.q
 
-        absx = x.abs()
-        sign = torch.sign(x)
-        sign = torch.where(sign == 0, torch.ones_like(sign), sign)
-        tol = _tol(lamb, q)
-        active = absx >= tol
+        z = y.abs()
+        active = z > 0
+        safe = torch.where(active, z, torch.ones_like(z))
+        sign = torch.where(y < 0, -torch.ones_like(y), torch.ones_like(y))
+        denom = 1.0 + lamb * q * (q - 1.0) * safe ** (q - 2.0)
 
-        grad_lamb_elem = torch.where(
-            active, -q * absx ** (q - 1.0) * sign * grad_y, torch.zeros_like(grad_y)
-        )
-        grad_x = torch.where(
-            active,
-            (1.0 - lamb * q * (q - 1.0) * absx ** (q - 2.0)) * grad_y,
-            torch.zeros_like(grad_y),
-        )
-        grad_lamb = grad_lamb_elem.sum().reshape_as(lamb) if lamb.requires_grad else None
+        grad_x = torch.where(active, grad_y / denom, torch.zeros_like(grad_y))
+        grad_lamb = None
+        if ctx.needs_input_grad[1]:
+            grad_lamb_elem = torch.where(
+                active, -q * safe ** (q - 1.0) / denom * sign * grad_y, torch.zeros_like(grad_y)
+            )
+            grad_lamb = grad_lamb_elem.sum().reshape_as(lamb)
         return grad_x, grad_lamb, None
 
 

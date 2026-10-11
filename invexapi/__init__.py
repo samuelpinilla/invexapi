@@ -17,6 +17,12 @@ from .operators import (
 from .optim import FASTA, LevenbergMarquardt, LinearizedADMM
 from .core import Loss, ManualVerifier, NumericalVerifier, Penalty, Reference, Verifier
 from .functions import (
+    CauchyLoss,
+    GemanMcClureLoss,
+    WelschLoss,
+    AdaptiveRobustLoss,
+    SquaredLogMinusRationalLoss,
+    LLqPenalty,
     L1Penalty,
     LinearTilt,
     LogMinusRationalPenalty,
@@ -54,6 +60,12 @@ __all__ = [
     "Max",
     "QuasinormInvexPenalty",
     "LogPenalty",
+    "LLqPenalty",
+    "CauchyLoss",
+    "GemanMcClureLoss",
+    "WelschLoss",
+    "AdaptiveRobustLoss",
+    "SquaredLogMinusRationalLoss",
     "LogMinusRationalPenalty",
     "TikhonovPenalty",
     "L1Penalty",

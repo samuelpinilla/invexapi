@@ -46,8 +46,8 @@ class NumericalVerifier:
     """Spot-checks ICLR 2024 Def. 4 (``admissible``) for functions exposing ``profile(w)``.
 
     For a separable ``g(x) = sum_i s(|x_i|)`` whose ``profile`` is ``s``, checks on a
-    log-spaced grid that s(0) = 0, s is strictly increasing, and s(w)/w^2 is
-    non-increasing. Use it to bring a user-written penalty into the rule engine::
+    log-spaced grid that s(0) = 0, s is positive and non-decreasing (a floating-point
+    stand-in for s' > 0), and s(w)/w^2 is non-increasing. Use it to bring a user-written penalty into the rule engine::
 
         cert = NumericalVerifier().check(my_penalty, "admissible")
         if cert is not None:
@@ -70,7 +70,9 @@ class NumericalVerifier:
             s0 = obj.profile(torch.zeros(1, dtype=torch.float64)).abs().item()
             s = obj.profile(w)
         ratio = s / (w * w)
-        increasing = bool((s[1:] > s[:-1]).all()) and bool((s > 0).all())
+        # Non-decreasing and positive, not strictly increasing: bounded profiles (Welsch)
+        # saturate to a floating-point plateau where s' > 0 is below resolution.
+        increasing = bool((s[1:] >= s[:-1]).all()) and bool((s > 0).all())
         ratio_steps = ratio[1:] - ratio[:-1]
         non_increasing = bool((ratio_steps <= self.rtol * ratio[:-1].abs()).all())
         if s0 == 0.0 and increasing and non_increasing:
