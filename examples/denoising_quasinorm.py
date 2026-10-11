@@ -5,7 +5,7 @@ minimizing ``0.5*||x-y||^2 + lamb*|x|^q`` with FISTA - the invex quasinorm prox
 plays the role of the denoiser.
 
 Running this script prints a UserWarning: nobody has certified the combined
-data-fidelity+penalty objective as convex/invex (see ``invexapi.penalties.Sum``).
+data-fidelity+penalty objective as convex/invex (see ``invexapi.functions.Sum``).
 """
 
 import torch

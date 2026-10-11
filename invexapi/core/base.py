@@ -6,9 +6,11 @@ from typing import Optional, Protocol
 import torch
 
 from ..certificate import Certificate
-from ..metadata import DesignDecision, Invariant, Reference, documented
+from ..metadata import Invariant, Reference, documented
 
-__all__ = ["Reference", "Certificate", "Loss", "Penalty", "Verifier", "ManualVerifier", "Sum"]
+__all__ = ["Reference", "Certificate", "Loss", "Penalty", "Verifier", "ManualVerifier", "CERTIFIABLE"]
+
+CERTIFIABLE = ("convex", "invex", "quasi_convex", "quasi_invex", "admissible", "differentiable")
 
 
 @documented(
@@ -32,45 +34,72 @@ class Loss(ABC):
     Concrete subclasses supply ``value(x)`` (the scalar objective, for logging/
     stopping criteria) and ``grad(x)`` (the (sub)gradient, for gradient-based
     solvers). Beyond that, a ``Loss`` optionally declares which classical function
-    classes it provably belongs to, via four properties - ``convex``, ``invex``,
-    ``quasi_convex``, ``quasi_invex`` - each an ``Optional[Certificate]``.
+    classes it provably belongs to, via certificate properties - ``convex``,
+    ``invex``, ``quasi_convex``, ``quasi_invex``, ``admissible`` (ICLR 2024 Def. 4)
+    and ``differentiable`` (C^1) - each an ``Optional[Certificate]``.
+
+    A certificate attached with :meth:`_certify` always wins; otherwise the
+    property asks :mod:`invexapi.rules` to derive one (e.g. ``admissible`` =>
+    ``invex``, or a ``Sum`` of admissible parts), and is ``None`` when no cited
+    rule applies.
     """
 
     def __init__(self) -> None:
-        self._convex: Optional[Certificate] = None
-        self._invex: Optional[Certificate] = None
-        self._quasi_convex: Optional[Certificate] = None
-        self._quasi_invex: Optional[Certificate] = None
+        for name in CERTIFIABLE:
+            setattr(self, f"_{name}", None)
 
     def _certify(self, property_name: str, certificate: Certificate) -> None:
         """Record that this instance provably has ``property_name``.
 
         Called from subclass ``__init__`` bodies with a fact known at construction
-        time (e.g. cited from a paper) - not meant to be called by optimizer code.
+        time (e.g. cited from a paper), or by whoever proved a property of a
+        composite - not meant to be called by optimizer code.
         """
-        if property_name not in ("convex", "invex", "quasi_convex", "quasi_invex"):
+        if property_name not in CERTIFIABLE:
             raise ValueError(f"unknown property: {property_name}")
         setattr(self, f"_{property_name}", certificate)
 
+    def _certificate(self, name: str) -> Optional[Certificate]:
+        manual = getattr(self, f"_{name}", None)
+        if manual is not None:
+            return manual
+        from ..rules import derive
+
+        return derive(self, name)
+
     @property
     def convex(self) -> Optional[Certificate]:
-        return self._convex
+        return self._certificate("convex")
 
     @property
     def invex(self) -> Optional[Certificate]:
-        return self._invex
+        return self._certificate("invex")
 
     @property
     def quasi_convex(self) -> Optional[Certificate]:
-        return self._quasi_convex
+        return self._certificate("quasi_convex")
 
     @property
     def quasi_invex(self) -> Optional[Certificate]:
-        # Invexity unconditionally implies quasi-invexity, so a certified `invex`
-        # loss is quasi-invex too even without a separate _certify call - unlike
-        # Sum's certificates, this fallback is mathematically unconditional, not an
-        # approximation.
-        return self._quasi_invex if self._quasi_invex is not None else self._invex
+        # Invexity unconditionally implies quasi-invexity, so a certified (or
+        # derived) `invex` certificate doubles as the quasi-invex one.
+        manual = getattr(self, "_quasi_invex", None)
+        if manual is not None:
+            return manual
+        invex = self.invex
+        if invex is not None:
+            return invex
+        from ..rules import derive
+
+        return derive(self, "quasi_invex")
+
+    @property
+    def admissible(self) -> Optional[Certificate]:
+        return self._certificate("admissible")
+
+    @property
+    def differentiable(self) -> Optional[Certificate]:
+        return self._certificate("differentiable")
 
     @abstractmethod
     def value(self, x: torch.Tensor) -> torch.Tensor:
@@ -120,40 +149,3 @@ class ManualVerifier:
 
     def check(self, obj: Loss, property_name: str) -> Optional[Certificate]:
         return getattr(obj, property_name)
-
-
-@documented(
-    decisions=[
-        DesignDecision(
-            choice="Sum's certificates default to None regardless of the parts' certificates",
-            rejected="auto-deriving Sum's certificates from smooth's and penalty's certificates",
-            rationale=(
-                "convexity composes additively (convex + convex = convex) but "
-                "invexity does not (invex + invex is not invex in general) - "
-                "auto-deriving would be silently wrong for exactly the case this "
-                "library cares about most, so no auto-derivation is done even for "
-                "the convex case where it would happen to be sound."
-            ),
-        )
-    ],
-    invariants=[
-        Invariant(
-            "a certificate on the combined objective must be attached explicitly "
-            "via sum_instance._certify(...) by whoever proved it (a human today, a "
-            "Verifier later) - never inferred from smooth/penalty automatically."
-        )
-    ],
-)
-class Sum(Loss):
-    """``smooth(x) + penalty(x)``, e.g. the combined objective FISTA minimizes."""
-
-    def __init__(self, smooth: Loss, penalty: Penalty):
-        super().__init__()
-        self.smooth = smooth
-        self.penalty = penalty
-
-    def value(self, x: torch.Tensor) -> torch.Tensor:
-        return self.smooth.value(x) + self.penalty.value(x)
-
-    def grad(self, x: torch.Tensor) -> torch.Tensor:
-        return self.smooth.grad(x) + self.penalty.grad(x)

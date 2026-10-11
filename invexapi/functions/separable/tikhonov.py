@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import torch
 
-from ..metadata import DesignDecision, documented
-from .base import Certificate, Penalty, Reference
+from ...metadata import DesignDecision, documented
+from ...core import Certificate, Penalty, Reference
+from ._admissible import admissible_certificate
 
 __all__ = ["TikhonovPenalty"]
 
@@ -48,6 +49,25 @@ class TikhonovPenalty(Penalty):
         self._certify("convex", convexity)
         self._certify("invex", convexity)
         self._certify("quasi_convex", convexity)
+        self._certify("admissible", admissible_certificate("lamb * w^2 / 2"))
+        self._certify(
+            "differentiable",
+            Certificate(
+                status="assumed",
+                source="manual",
+                reference=Reference(
+                    authors=_CONVEXITY_REFERENCE.authors,
+                    title=_CONVEXITY_REFERENCE.title,
+                    venue=_CONVEXITY_REFERENCE.venue,
+                    year=_CONVEXITY_REFERENCE.year,
+                    locator="Section 3.1.4 (quadratic functions, gradient lamb*x)",
+                ),
+            ),
+        )
+
+    def profile(self, w: torch.Tensor) -> torch.Tensor:
+        """Scalar profile s with g(x) = sum s(|x_i|)."""
+        return 0.5 * self.lamb * w * w
 
     def value(self, x: torch.Tensor) -> torch.Tensor:
         return 0.5 * self.lamb * torch.sum(x * x)

@@ -1,6 +1,6 @@
 import torch
 
-from invexapi.penalties.operators import FiniteDifference2D, Identity
+from invexapi.operators import FiniteDifference2D, Identity
 
 
 def test_identity_is_a_no_op():
@@ -26,3 +26,16 @@ def test_finite_difference_zero_on_constant_image():
     op = FiniteDifference2D()
     x = torch.full((6, 6), 3.0)
     assert torch.allclose(op.apply(x), torch.zeros(2, 6, 6))
+
+
+def test_operator_hierarchy():
+    from invexapi.operators import (
+        FrFTAmbiguity, LiftedFrFTAmbiguity, LinearOperator, NonlinearOperator, Operator,
+    )
+
+    assert issubclass(LinearOperator, Operator) and issubclass(NonlinearOperator, Operator)
+    assert issubclass(Identity, LinearOperator) and issubclass(FiniteDifference2D, LinearOperator)
+    assert issubclass(LiftedFrFTAmbiguity, LinearOperator)
+    assert issubclass(FrFTAmbiguity, NonlinearOperator) and not issubclass(FrFTAmbiguity, LinearOperator)
+    x = torch.randn(4)
+    assert torch.equal(Identity()(x), x)  # __call__ forwards to apply

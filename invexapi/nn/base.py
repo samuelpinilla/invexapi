@@ -25,14 +25,6 @@ LAYER_REFERENCE = Reference(
     locator="Theorem 9, Corollary 2, Theorem 8",
 )
 
-_COMPOSITION_REFERENCE = Reference(
-    authors=LAYER_REFERENCE.authors,
-    title=LAYER_REFERENCE.title,
-    venue=LAYER_REFERENCE.venue,
-    year=LAYER_REFERENCE.year,
-    locator="Theorem 8",
-)
-
 UNVERIFIED_INVARIANT = Invariant(
     "the invex certificate on ixLinear/ixConv2d is assumed, not runtime-verified"
 )
@@ -52,9 +44,21 @@ class InvexCertified(Protocol):
     def invex(self) -> Optional[Certificate]: ...
 
 
+class _Stack:
+    def __init__(self, children: Iterable[InvexCertified]):
+        self._children = list(children)
+
+    def invex_children(self) -> list:
+        return self._children
+
+
 def certify_composition(children: Iterable[InvexCertified]) -> Optional[Certificate]:
-    """Certified iff every child is certified, else ``None``."""
-    children = list(children)
-    if children and all(child.invex is not None for child in children):
-        return Certificate(status="assumed", source="composition", reference=_COMPOSITION_REFERENCE)
-    return None
+    """Certified iff every child is certified, else ``None``.
+
+    Delegates to the registered ``full_rank_composition`` rule (supp. Thm 8), so the
+    result is a derived certificate (``source="rule:full_rank_composition"``) whose
+    ``derived_from`` lists the children's certificates.
+    """
+    from ..rules import derive
+
+    return derive(_Stack(children), "invex")

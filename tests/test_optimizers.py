@@ -1,12 +1,12 @@
 import pytest
 import torch
 
-from invexapi import LogInvexPenalty, QuasinormInvexPenalty
+from invexapi import LogMinusRationalPenalty, QuasinormInvexPenalty
 from invexapi.optim import FISTA, GradientDescent, NonlinearCG
 
-# _Quadratic below carries no certificate, and QuasinormInvexPenalty/LogInvexPenalty
+# _Quadratic below carries no certificate, and QuasinormInvexPenalty/LogMinusRationalPenalty
 # only certify `invex` (never re-derived for the combined FISTA objective, see
-# invexapi.penalties.Sum) - every solver.run() call in this file is expected to warn
+# invexapi.functions.Sum) - every solver.run() call in this file is expected to warn
 # that no global-optimum guarantee applies, which these tests assert explicitly
 # rather than letting print to stderr silently.
 
@@ -80,7 +80,7 @@ def test_fista_converges_with_quasinorm_penalty():
 def test_fista_converges_with_log_penalty():
     A, b, x_star = _toy_problem()
     smooth = _Quadratic(A, b)
-    penalty = LogInvexPenalty(lamb=1e-4)
+    penalty = LogMinusRationalPenalty(lamb=1e-4)
     L = torch.linalg.eigvalsh(A.T @ A).max().item()
     solver = FISTA(smooth, penalty, step=1.0 / L, max_iter=200, tol=1e-10)
 

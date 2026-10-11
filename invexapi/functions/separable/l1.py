@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import torch
 
-from ..metadata import documented
-from .base import Certificate, Penalty, Reference
+from ...metadata import documented
+from ...core import Certificate, Penalty, Reference
+from ._admissible import admissible_certificate
 
 __all__ = ["L1Penalty"]
 
@@ -20,7 +21,7 @@ _CONVEXITY_REFERENCE = Reference(
 class L1Penalty(Penalty):
     """Convex L1 penalty ``g(x) = lamb * ||x||_1``.
 
-    A plain textbook penalty, not from any of the source papers.
+    A plain textbook penalty, included as a convex baseline.
     """
 
     def __init__(self, lamb: float):
@@ -33,6 +34,11 @@ class L1Penalty(Penalty):
         self._certify("convex", convexity)
         self._certify("invex", convexity)
         self._certify("quasi_convex", convexity)
+        self._certify("admissible", admissible_certificate("lamb * w"))
+
+    def profile(self, w: torch.Tensor) -> torch.Tensor:
+        """Scalar profile s with g(x) = sum s(|x_i|)."""
+        return self.lamb * w
 
     def value(self, x: torch.Tensor) -> torch.Tensor:
         return self.lamb * x.abs().sum()

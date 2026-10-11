@@ -11,7 +11,7 @@
 <h1 align="center">invexapi</h1>
 
 <p align="center">
-  A minimal, PyTorch-only toolkit for <b>invex</b> optimization: penalties with
+  A minimal, PyTorch-only toolkit for <b>invex</b> optimization: functions with
   proven optimality certificates, and the solvers that use them.
 </p>
 
@@ -64,19 +64,69 @@ choice.
 
 ## What's inside
 
-**Penalties** (`invexapi.penalties`) - loss/penalty terms plus a certificate of
-what's provably known about each one:
+**Functions** (`invexapi.functions`) - loss/penalty terms plus a certificate of
+what's provably known about each one. They are grouped by what the function *is*
+(`separable/`, `sets/`, `fidelity/`, `combinators/`), not by its class. Being convex,
+invex, etc. is recorded on each instance, because those classes overlap and can
+depend on the parameters. To list functions by certified class:
 
-| Penalty | Form | Certified as |
+```python
+invexapi.catalog(invex=True)               # every function certified invex
+invexapi.catalog(invex=True, convex=False) # invex but not certified convex
+```
+
+| Function | Form | Certified as |
 |---|---|---|
 | `QuasinormInvexPenalty(lamb, q)` | `λ·\|x\|^q` | invex |
-| `LogInvexPenalty(lamb)` | `log(1+\|x\|) − \|x\|/(2+2\|x\|)` | invex |
+| `LogPenalty(lamb, beta=1)` | `λ·log(1+β\|x\|)` | invex (β=1, NeurIPS'22 Eq. 7) |
+| `LogMinusRationalPenalty(lamb, beta=2)` | `λ·(log(1+\|x\|) − \|x\|/(β+β\|x\|))` | invex (β=2, NeurIPS'22 Eq. 10) |
 | `TikhonovPenalty(lamb)` | `λ/2·‖x‖²` | convex, invex, quasi-convex |
 | `L1Penalty(lamb)` | `λ·‖x‖₁` | convex, invex, quasi-convex |
+| `PSDTracePenalty(lamb)` | `λ·tr(Z) + 𝟙{Z ⪰ 0}` | convex, invex, quasi-convex |
+| `Composed(g, H, b)` | `g(Hx − b)` | from rules |
+| `Max(f, h)` | `max(f, h)` | from rules |
+| `LinearTilt(base, c)` | `base(x) − Re⟨c, x⟩` | nothing (attach explicitly) |
+| `SlackAmplitudeLeastSquares(b, slack)` | `½‖\|z\| + s − b‖²` (smooth term) | nothing (nonconvex) |
 
-Certificates are attached explicitly and never inferred - convexity composes
-additively, but invexity does not, so a combined objective only carries a
-certificate someone has actually proven for it.
+Both log proxes return the true global minimiser, including when the prox
+subproblem is nonconvex.
+
+**Rule engine** (`invexapi.rules`). A combination of functions is certified only
+when a published theorem covers it. Each rule cites its source, and every derived
+certificate records the certificates it was derived from:
+
+```python
+from invexapi import Composed, FiniteDifference1D, L1Penalty, LogPenalty, Sum, rules
+
+obj = Sum(L1Penalty(0.1), LogPenalty(0.2, beta=3.0))
+print(rules.explain(obj.invex))
+# rule:admissible_invex [assumed] - Pinilla, S. and Thiyagalingam, J. (2024), Theorem 3 (i)
+#   rule:admissible_sum [assumed] - ... Theorem 3 (ii)
+#     manual [assumed] - ... Definition 4, with s(w) = lamb * w
+#     manual [assumed] - ... Definition 4, with s(w) = lamb * log(1 + beta*w), any beta > 0
+
+Composed(LogPenalty(0.1), FiniteDifference1D(64)).invex   # ICLR'24 Thm 4: invex
+```
+
+Built-in rules:
+
+- convex + convex is convex, and admissible + admissible is admissible, hence
+  invex (ICLR'24 Thm 3).
+- g(Hx − b) inherits convexity from g; g(Hx − b) is invex when g is invex and C¹
+  and H has full row rank (NeurIPS'22 Lemma 2).
+- An admissible g of a 1-D difference is invex (ICLR'24 Thm 4); of the 2-D
+  difference stack it is only quasi-invex (App. B.1).
+- The max of two invex functions is quasi-invex (ICLR'24 Lemma 1).
+- Invex layers compose (`ixSequential`).
+
+Invex + invex derives nothing, because it is not invex in general. Add your own
+theorem with `rules.register(Rule(...))`; a rule without a published `Reference`
+is rejected.
+
+`NumericalVerifier().check(f, "admissible")` checks ICLR'24 Def. 4 numerically for
+any separable function that exposes `profile(w)`. A passing check gives a
+certificate with status `"evidence"`. That status carries into every certificate
+derived from it, so a numerical check is never presented as a proof.
 
 **Solvers** (`invexapi.optim`) - generic, decoupled from the penalties above:
 
@@ -84,12 +134,56 @@ certificate someone has actually proven for it.
 - `FISTA` - accelerated proximal gradient for `smooth(x) + penalty(x)`
 - `NonlinearCG` - Polak-Ribière+ with automatic restart
 - `LinearizedADMM` - for `smooth(x) + penalty(D@x)` (e.g. total variation)
+- `FASTA` - adaptive/accelerated forward-backward splitting for
+  `smooth(A@x) + penalty(x)` with BB step sizes and non-monotone backtracking
+  (real or complex tensors)
+- `LevenbergMarquardt` - nonlinear least squares `min_x 0.5*||F(x) - y||^2` for
+  any differentiable `Operator`, with QR-solved damped Gauss-Newton steps
 
-All four warn (never error) when run on an objective without a convex/invex
-certificate, since no global-optimum guarantee applies in that case.
+All of them warn (never error) when the objective they actually minimize
+(e.g. `smooth + penalty(D@x)` for LinearizedADMM) has no convex/invex
+certificate, since no global-optimum guarantee applies in that case. The warning
+lists what *is* certified (e.g. a quasi-invex TV term).
 
-**Linear operators** (`invexapi.penalties.operators`) - `Identity` and
-`FiniteDifference2D` (2D total variation), each with a verified adjoint.
+**Operators** (`invexapi.operators`) - `Operator` is the base forward map
+(`apply`); `LinearOperator` adds an `adjoint` (used by FASTA and LinearizedADMM)
+and `NonlinearOperator` marks differentiable nonlinear maps (used by
+LevenbergMarquardt through autograd):
+
+| Operator | Kind | Map |
+|---|---|---|
+| `Identity` | linear | `x -> x` |
+| `MatrixOperator(M)` | linear | `x -> M x` (dense) |
+| `Diagonal(d)` | linear | `x -> d ⊙ x` |
+| `Convolution(kernel, shape)` | linear | circular n-D convolution (FFT) |
+| `Subsample(mask)` | linear | `x -> x[mask]` |
+| `FiniteDifference1D(n)` | linear | `x -> x[1:] - x[:-1]` (full row rank) |
+| `FiniteDifference2D` | linear | 2D total-variation gradient |
+| `FractionalFourier` | linear | fast discrete FrFT (also the `frft` function) |
+| `LiftedFrFTAmbiguity` | linear | lifted FrFT-based radar ambiguity function `Z -> Tr(B_{α,k} Z)` |
+| `FrFTAmbiguity` | nonlinear | FrFT-based ambiguity function of a signal `x -> A[α,k]` |
+
+Operators combine: `A @ B` (composition), `A + B`, `c * A`, `A.H` (adjoint), and
+`A @ x` applies `A` to a tensor. The result is linear exactly when every part is.
+
+```python
+from invexapi.operators import Convolution, Subsample, check_adjoint
+
+A = Subsample(mask) @ Convolution(kernel, (256, 256))  # blur, then keep observed pixels
+check_adjoint(A)                    # inner-product identity, raises if wrong
+step = 1.0 / A.norm() ** 2          # safe FISTA step for 0.5*||A x - y||^2
+```
+
+Each operator also records what is known about its structure: `full_row_rank`,
+`injective`, `unitary` and `diagonal`. A value is `True`/`False` when it follows
+exactly from the operator's construction, and `None` when unknown. Use
+`.declare(full_row_rank=True)` to assert one yourself. Combining operators keeps
+a property only when it provably carries over; otherwise the result is `None`.
+(For a nonlinear operator these describe its Jacobian at every point.)
+
+`in_shape`/`out_shape` give unbatched shapes (`None` = shape-agnostic). The FrFT
+ambiguity operators take `pad` to zero-pad the signal before transforming, which
+makes the fast FrFT much more accurate for off-centre or chirped signals.
 
 **Structured documentation** (`invexapi.metadata`) - design provenance,
 rejected alternatives, and invariants as introspectable dataclasses rather than
@@ -124,7 +218,8 @@ fixed-seed random inputs, with no CUDA dependency anywhere in this repo.
 
 See `examples/` for denoising and deblurring scripts covering FISTA and
 Linearized ADMM with total variation, using both the quasinorm and log invex
-penalties. The ADMM/TV examples need a test image, fetched separately:
+penalties, plus `wavemax_ambiguity_fasta.py`: lifted radar-waveform recovery
+from an FrFT-based ambiguity function with FASTA. The ADMM/TV examples need a test image, fetched separately:
 
 ```bash
 python examples/data/download.py

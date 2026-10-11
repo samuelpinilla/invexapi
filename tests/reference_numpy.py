@@ -1,6 +1,7 @@
-"""Direct NumPy transcriptions of the original CUDA kernels, kept close enough to
-the source to eyeball-diff against it. No cupy/CUDA anywhere - used only to check
-the PyTorch implementation against the paper's exact reference math.
+"""Independent NumPy implementations of the penalties' prox and gradient formulas,
+written elementwise and in float32 to mirror the papers' reference math as
+literally as possible. No GPU dependency - used only as a correctness oracle for
+the vectorized PyTorch implementations.
 """
 
 import numpy as np
@@ -29,7 +30,7 @@ def quasinorm_prox_np(x: np.ndarray, lamb: float, q: float) -> np.ndarray:
 
 
 def quasinorm_grad_np(x: np.ndarray, grad_y: np.ndarray, lamb: float, q: float):
-    """Returns (grad_wrt_lamb_elementwise, grad_wrt_x), matching gradG's (gx, gz)."""
+    """Returns (grad_wrt_lamb_elementwise, grad_wrt_x) of the quasinorm prox."""
     x = x.astype(np.float32)
     absx = np.abs(x)
     sign = np.where(x < 0, -1.0, 1.0).astype(np.float32)
@@ -49,21 +50,30 @@ def _cbrt_np(v: np.ndarray) -> np.ndarray:
     return np.sign(v) * np.abs(v) ** (1.0 / 3.0)
 
 
-def log_prox_np(x: np.ndarray, lamb: float) -> np.ndarray:
+def log_minus_rational_prox_np(x: np.ndarray, lamb: float, beta: float = 2.0) -> np.ndarray:
+    """Prox of lamb*(log(1+|x|) - |x|/(beta+beta|x|)): largest Cardano root, clamped at 0."""
     x = x.astype(np.float32)
     t = np.abs(x)
     sign = np.where(x < 0, -1.0, 1.0).astype(np.float32)
 
-    a = 2.0
-    b = 4.0 - 2.0 * t
-    c = 2.0 * lamb + 2.0 - 4.0 * t
-    d = 2.0 * lamb - lamb - 2.0 * t
+    a = beta
+    b = 2.0 * beta - beta * t
+    c = beta * lamb + beta - 2.0 * beta * t
+    d = (beta - 1.0) * lamb - beta * t
 
     p = -b / (3.0 * a)
     qq = p ** 3.0 + (b * c - 3.0 * a * d) / (6.0 * a ** 2.0)
     r = c / (3.0 * a)
 
     aux = np.maximum(qq ** 2 + (r - p ** 2) ** 3, 0.0)
-    beta = np.maximum(_cbrt_np(qq + np.sqrt(aux)) + _cbrt_np(qq - np.sqrt(aux)) + p, 0.0)
+    sol = np.maximum(_cbrt_np(qq + np.sqrt(aux)) + _cbrt_np(qq - np.sqrt(aux)) + p, 0.0)
 
-    return (sign * beta).astype(np.float32)
+    return (sign * sol).astype(np.float32)
+
+
+def log_prox_np(x: np.ndarray, lamb: float, beta: float = 1.0) -> np.ndarray:
+    """Prox of (lamb/beta)*log(1+beta|x|) (the paper code's scaling): larger quadratic root, clamped at 0."""
+    x = x.astype(np.float32)
+    aux = np.maximum((beta * np.abs(x) + 1.0) ** 2 - 4.0 * lamb * beta, 0.0)
+    sol = np.sign(x) * np.maximum((beta * np.abs(x) - 1.0 + np.sqrt(aux)) / (2.0 * beta), 0.0)
+    return sol.astype(np.float32)

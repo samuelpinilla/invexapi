@@ -2,7 +2,7 @@ import torch
 
 from invexapi import QuasinormInvexPenalty
 from invexapi.optim import LinearizedADMM
-from invexapi.penalties.operators import FiniteDifference2D
+from invexapi.operators import FiniteDifference2D
 
 
 class _Quadratic:

@@ -5,7 +5,7 @@ import math
 import torch
 
 from ..metadata import DesignDecision, documented
-from ..penalties import Sum
+from ..functions import Sum
 from .base import Solver
 
 __all__ = ["FISTA"]
@@ -19,7 +19,7 @@ __all__ = ["FISTA"]
             rationale=(
                 "a global-optimum claim is about the COMBINED objective smooth+penalty "
                 "minimizes, and certificates don't compose from the parts (see "
-                "invexapi.penalties.Sum) - checking the parts separately could miss "
+                "invexapi.functions.Sum) - checking the parts separately could miss "
                 "that the combination itself is uncertified even when both halves are"
             ),
         )

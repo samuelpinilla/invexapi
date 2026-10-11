@@ -4,20 +4,26 @@ from typing import Callable, Optional
 
 import torch
 
-from ..metadata import DesignDecision, Invariant, Provenance, documented
-from ..penalties.operators import Identity, LinearOperator
+from ..metadata import DesignDecision, Invariant, Provenance, Reference, documented
+from ..functions import Composed, Sum
+from ..operators import Identity, LinearOperator
 from .base import Solver
 
 __all__ = ["LinearizedADMM"]
+
+_ADMM_REFERENCE = Reference(
+    authors="Pinilla, S. and Thiyagalingam, J.",
+    title="Global Optimality for Non-linear Constrained Restoration Problems via Invexity",
+    venue="International Conference on Learning Representations (ICLR)",
+    year=2024,
+    locator="ADMM algorithm for invex-regularized restoration",
+)
 
 
 @documented(
     provenance=[
         Provenance(
-            files=(
-                "code from conference paper Global Optimality for Nonlinear "
-                "Constrained Restoration Problems via Invexity",
-            ),
+            reference=_ADMM_REFERENCE,
             description=(
                 "TV-regularized denoising via ADMM with a linearized/relaxed "
                 "x-update (fixed alpha=0.5 extrapolation, fixed rho, no adaptive "
@@ -37,13 +43,12 @@ __all__ = ["LinearizedADMM"]
             ),
         ),
         DesignDecision(
-            choice="warn on smooth and penalty separately, not via a combined Sum",
-            rejected="reusing invexapi.penalties.Sum like FISTA does",
+            choice="warn off Sum(smooth, Composed(penalty, D)) - the objective actually minimized",
+            rejected="warning on smooth and penalty separately",
             rationale=(
-                "Sum assumes smooth and penalty share x's domain; here penalty "
-                "operates on D@x, generally a different shape (e.g. TV's D stacks "
-                "a vertical+horizontal gradient field), so no single combined "
-                "object can be constructed to certify"
+                "certified parts do not make a certified sum (invex + invex is not "
+                "invex), and penalty alone ignores D; Composed(penalty, D) lives on "
+                "x's domain, so the true objective is one object, as in FISTA"
             ),
         ),
     ],
@@ -61,16 +66,15 @@ class LinearizedADMM(Solver):
     """Linearized ADMM for ``min_x smooth(x) + penalty(D@x)``.
 
     Named ``LinearizedADMM``, not ``ADMM``, because its x-update is a single
-    relaxed/extrapolated gradient step (transcribed exactly from the source ADMM
-    scripts), not an exact ADMM subproblem solve.
+    relaxed/extrapolated gradient step, not an exact ADMM subproblem solve.
 
     ``smooth`` needs ``.grad(x)`` (and optionally ``.value(x)``); ``penalty`` needs
     ``.prox(z, step)`` (and optionally ``.value(z)``), operating on ``D@x``'s
     domain, which may differ in shape from ``x`` (e.g. total-variation's ``D``
     stacks a vertical and horizontal gradient field). ``D`` defaults to
-    :class:`~invexapi.penalties.operators.Identity`. ``project``, if given, is
+    :class:`~invexapi.operators.Identity`. ``project``, if given, is
     applied to ``x`` after every update (e.g. ``lambda x: x.clamp(min=0)`` for
-    natural-image pixel constraints, matching the source scripts) - defaulting to
+    natural-image pixel constraints) - defaulting to
     no projection, since forcing non-negativity isn't appropriate for a general
     solver.
     """
@@ -95,11 +99,7 @@ class LinearizedADMM(Solver):
         self.project = project
 
     def run(self, x0: torch.Tensor):
-        # Sum (used by FISTA) assumes smooth and penalty share x's domain; here
-        # penalty operates on D@x, generally a different shape, so there is no
-        # single combined object to check - warn on each half separately instead.
-        self._warn_if_unproven(self.smooth, "smooth")
-        self._warn_if_unproven(self.penalty, "penalty")
+        self._warn_if_unproven(Sum(self.smooth, Composed(self.penalty, self.D)), "smooth+penalty(D@x)")
 
         x = x0.clone()
         x_relaxed = x0.clone()

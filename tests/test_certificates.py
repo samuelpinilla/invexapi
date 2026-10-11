@@ -25,16 +25,28 @@ def test_tikhonov_certifies_all_four_properties():
     assert penalty.quasi_invex is penalty.invex  # derived fallback, not separately set
 
 
-def test_sum_never_auto_derives_certificates():
+def test_sum_derives_certificates_only_through_cited_rules():
     a = TikhonovPenalty(lamb=0.5)
     b = TikhonovPenalty(lamb=0.1)
 
     combined = Sum(a, b)
 
-    assert combined.invex is None
+    assert combined.convex.source == "rule:convex_sum"
+    assert combined.convex.derived_from == (a.convex, b.convex)
+    assert combined.convex.reference.locator.startswith("Section 3.2.1")
+    assert combined.invex is not None and combined.quasi_convex is not None
+
+
+def test_sum_of_invex_parts_alone_derives_nothing():
+    class _InvexOnly(_Uncertified):
+        def __init__(self, cert):
+            self.invex = cert
+
+    cert = TikhonovPenalty(lamb=1.0).invex
+    combined = Sum(_InvexOnly(cert), _InvexOnly(cert))
+
+    assert combined.invex is None  # invex + invex is not invex in general
     assert combined.convex is None
-    assert combined.quasi_convex is None
-    assert combined.quasi_invex is None
 
 
 def test_gradient_descent_warns_on_uncertified_objective():

@@ -13,7 +13,7 @@ import torch
 
 from invexapi import Loss, QuasinormInvexPenalty
 from invexapi.optim import LinearizedADMM
-from invexapi.penalties.operators import FiniteDifference2D
+from invexapi.operators import FiniteDifference2D
 
 from _data import load_image
 

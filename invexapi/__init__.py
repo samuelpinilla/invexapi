@@ -1,30 +1,45 @@
 from importlib.metadata import version as _version
 
-from . import metadata, nn, optim, penalties
+from . import core, functions, metadata, nn, operators, optim, rules
 from .certificate import Certificate
 from .metadata import DesignDecision, Invariant, Provenance
-from .optim import LinearizedADMM
-from .penalties import (
+from .operators import (
+    FiniteDifference1D,
     FiniteDifference2D,
+    FractionalFourier,
+    FrFTAmbiguity,
     Identity,
-    L1Penalty,
+    LiftedFrFTAmbiguity,
     LinearOperator,
-    Loss,
-    LogInvexPenalty,
-    ManualVerifier,
-    Penalty,
+    NonlinearOperator,
+    Operator,
+)
+from .optim import FASTA, LevenbergMarquardt, LinearizedADMM
+from .core import Loss, ManualVerifier, NumericalVerifier, Penalty, Reference, Verifier
+from .functions import (
+    L1Penalty,
+    LinearTilt,
+    LogMinusRationalPenalty,
+    LogPenalty,
+    PSDTracePenalty,
     QuasinormInvexPenalty,
-    Reference,
+    SlackAmplitudeLeastSquares,
+    Composed,
+    Max,
     Sum,
     TikhonovPenalty,
-    Verifier,
+    catalog,
 )
 
 __version__ = _version("invexapi")
 
 __all__ = [
+    "core",
+    "rules",
+    "functions",
+    "catalog",
     "optim",
-    "penalties",
+    "operators",
     "metadata",
     "nn",
     "Loss",
@@ -33,15 +48,30 @@ __all__ = [
     "Reference",
     "Verifier",
     "ManualVerifier",
+    "NumericalVerifier",
     "Sum",
+    "Composed",
+    "Max",
     "QuasinormInvexPenalty",
-    "LogInvexPenalty",
+    "LogPenalty",
+    "LogMinusRationalPenalty",
     "TikhonovPenalty",
     "L1Penalty",
+    "PSDTracePenalty",
+    "LinearTilt",
+    "SlackAmplitudeLeastSquares",
+    "Operator",
     "LinearOperator",
+    "NonlinearOperator",
     "Identity",
+    "FiniteDifference1D",
     "FiniteDifference2D",
+    "FractionalFourier",
+    "FrFTAmbiguity",
+    "LiftedFrFTAmbiguity",
     "LinearizedADMM",
+    "FASTA",
+    "LevenbergMarquardt",
     "Provenance",
     "DesignDecision",
     "Invariant",

@@ -7,7 +7,7 @@ from tests.reference_numpy import quasinorm_grad_np, quasinorm_prox_np
 
 
 @pytest.mark.parametrize("lamb,q", [(0.05, 0.5), (0.1, 0.3), (0.2, 0.7)])
-def test_prox_matches_reference_kernel(lamb, q):
+def test_prox_matches_numpy_reference(lamb, q):
     torch.manual_seed(0)
     x = (torch.rand(64) * 4 - 2).double()
 

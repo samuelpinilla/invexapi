@@ -2,12 +2,11 @@
 
 Same setup as ``denoising_admm_tv.py`` (``min_x 0.5*||x-y||^2 + lamb*g(Dx)`` via
 ``LinearizedADMM`` + ``FiniteDifference2D`` on
-``examples/data/images/noisy_image.tif``), but with ``g`` = ``LogInvexPenalty``
-instead of ``QuasinormInvexPenalty`` - the reference ADMM scripts only pair TV with
-the quasinorm/L1/Llq penalties, so there is no original CUDA kernel to validate
-this specific combination against; it demonstrates that any `Penalty` (paper-sourced
-or not) works as `LinearizedADMM`'s second argument, per its generic `penalty.prox`
-contract.
+``examples/data/images/noisy_image.tif``), but with ``g`` = ``LogMinusRationalPenalty``
+instead of ``QuasinormInvexPenalty``. The papers do not report TV with the log
+penalty, so there is no published result to validate this combination against;
+it demonstrates that any ``Penalty`` (paper-sourced or not) works as
+``LinearizedADMM``'s second argument, per its generic ``penalty.prox`` contract.
 
 Runs on CUDA automatically if available, or force CPU with ``--device cpu`` (see
 ``denoising_admm_tv.py``'s docstring for why no other device-handling is needed).
@@ -19,9 +18,9 @@ import time
 import matplotlib.pyplot as plt
 import torch
 
-from invexapi import Loss, LogInvexPenalty
+from invexapi import Loss, LogMinusRationalPenalty
 from invexapi.optim import LinearizedADMM
-from invexapi.penalties.operators import FiniteDifference2D
+from invexapi.operators import FiniteDifference2D
 
 from _data import load_image
 
@@ -53,7 +52,7 @@ def main():
     print(f"running on: {device}")
 
     smooth = _DataFidelity(y)
-    penalty = LogInvexPenalty(lamb=3e-1)
+    penalty = LogMinusRationalPenalty(lamb=3e-1)
     solver = LinearizedADMM(
         smooth,
         penalty,

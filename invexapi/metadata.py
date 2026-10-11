@@ -1,7 +1,7 @@
-"""Rich prose docstrings elsewhere in this library tend to tangle three different
-kinds of information together: which source file/kernel an implementation was
-transcribed from, why one design was chosen over a rejected alternative, and what
-invariant must be preserved across future edits. This module gives each of those
+"""Rich prose docstrings tend to tangle three different kinds of information
+together: which published method an implementation follows, why one design was
+chosen over a rejected alternative, and what invariant must be preserved across
+future edits. This module gives each of those
 its own small dataclass, plus a ``@documented`` decorator that attaches them to a
 class/function as introspectable attributes and registers it so a tool can retrieve 
 every documented item as plain JSON via ``dump_all_json()`` without parsing docstrings 
@@ -42,10 +42,15 @@ class Reference:
 
 @dataclass(frozen=True)
 class Provenance:
-    """Which source file(s)/kernel(s) an implementation was transcribed from."""
+    """Which published method an implementation follows, and how closely.
 
-    files: tuple[str, ...]
+    ``reference`` must point at something a reader can obtain (a paper, book or
+    report), never at a file path or unpublished code; ``description`` says what
+    was reproduced from it (e.g. "same boundary convention", "same step-size rule").
+    """
+
     description: str
+    reference: Optional[Reference] = None
 
 
 @dataclass(frozen=True)
@@ -85,7 +90,7 @@ def documented(
     ``provenance``/``decisions``/``invariants`` describe the decorated class or
     function itself, not any particular instance, so they're stored as plain
     attributes rather than requiring instantiation (unlike
-    :class:`invexapi.penalties.Certificate`, which genuinely can vary per instance).
+    :class:`invexapi.certificate.Certificate`, which genuinely can vary per instance).
 
     ``example``, if given, is a zero-argument callable building a representative
     instance purely so :func:`dump_all` can read its ``Certificate``s - only

@@ -2,19 +2,11 @@ from __future__ import annotations
 
 import torch
 
-from ..metadata import DesignDecision, Invariant, Provenance, documented
-from .base import Certificate, Penalty, Reference
+from ...metadata import DesignDecision, Invariant, Provenance, documented
+from ...core import Certificate, Penalty, Reference
+from ._admissible import admissible_certificate
 
 __all__ = ["QuasinormInvexPenalty"]
-
-_KERNEL_PROVENANCE = Provenance(
-    files=(
-        "codes from conference paper Improved Imaging by Invex Regularizers" 
-        "with Global Optima Guarantees",
-    ),
-    description="byte-identical to implementation in Improved Imaging by Invex Regularizers" 
-                "with Global Optima Guarantees",
-)
 
 _INVEXITY_REFERENCE = Reference(
     authors="Pinilla, Mu, Bourne, Thiyagalingam",
@@ -22,6 +14,16 @@ _INVEXITY_REFERENCE = Reference(
     venue="NeurIPS",
     year=2022,
     locator="Lemma 1, item 1 (Eq. 6)",
+)
+
+_PROX_PROVENANCE = Provenance(
+    description=(
+        "proximal operator of lamb*|x|^q solved by the paper's fixed-point "
+        "iteration (4 steps from the midpoint of [beta, |x|]) with its "
+        "thresholds tol/beta/tau, and the paper's closed-form gradient of the "
+        "prox with respect to x and lamb"
+    ),
+    reference=_INVEXITY_REFERENCE,
 )
 
 
@@ -34,14 +36,14 @@ def _beta(lamb: torch.Tensor, q: float) -> torch.Tensor:
 
 
 @documented(
-    provenance=[_KERNEL_PROVENANCE],
+    provenance=[_PROX_PROVENANCE],
     decisions=[
         DesignDecision(
             choice="custom analytic torch.autograd.Function backward",
             rejected="plain autograd through the 4-step Newton fixed-point loop in forward",
             rationale=(
-                "the paper's analytic gradient (gradG kernel) avoids autograd having "
-                "to save every iteration's activations to backprop through the loop"
+                "the closed-form gradient of the prox avoids autograd having to save "
+                "every iteration's activations to backpropagate through the loop"
             ),
         )
     ],
@@ -102,7 +104,7 @@ class _QuasinormProx(torch.autograd.Function):
 
 
 @documented(
-    provenance=[_KERNEL_PROVENANCE],
+    provenance=[_PROX_PROVENANCE],
     example=lambda: QuasinormInvexPenalty(lamb=0.1, q=0.5),
 )
 class QuasinormInvexPenalty(Penalty):
@@ -122,6 +124,11 @@ class QuasinormInvexPenalty(Penalty):
         self.lamb = lamb
         self.q = q
         self._certify("invex", Certificate(status="assumed", source="manual", reference=_INVEXITY_REFERENCE))
+        self._certify("admissible", admissible_certificate("lamb * w^q"))
+
+    def profile(self, w: torch.Tensor) -> torch.Tensor:
+        """Scalar profile s with g(x) = sum s(|x_i|)."""
+        return self.lamb * w.pow(self.q)
 
     def value(self, x: torch.Tensor) -> torch.Tensor:
         return self.lamb * x.abs().pow(self.q).sum()

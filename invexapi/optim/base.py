@@ -25,7 +25,7 @@ __all__ = ["Solver"]
     ],
 )
 class Solver(ABC):
-    """Common shape for GradientDescent, FISTA, and NonlinearCG."""
+    """Common shape for every solver in :mod:`invexapi.optim`."""
 
     def __init__(self, max_iter: int = 100, tol: float = 1e-6):
         self.max_iter = max_iter

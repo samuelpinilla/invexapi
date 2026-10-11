@@ -30,6 +30,10 @@ class ixSequential(nn.Sequential):
                 )
         super().__init__(*layers)
 
+    def invex_children(self) -> list:
+        """The layers whose certificates the ``full_rank_composition`` rule reads."""
+        return list(self)
+
     @property
     def invex(self) -> Optional[Certificate]:
-        return certify_composition(self)
+        return certify_composition(self.invex_children())

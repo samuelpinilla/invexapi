@@ -6,12 +6,12 @@ where ``g`` is the log invex penalty.
 
 Running this script still prints FISTA's UserWarning: the data-fidelity term alone
 is certified convex, but the *combined* objective isn't (see
-``invexapi.penalties.Sum`` - certificates never compose automatically).
+``invexapi.functions.Sum`` - certificates never compose automatically).
 """
 
 import torch
 
-from invexapi import Certificate, Loss, LogInvexPenalty
+from invexapi import Certificate, Loss, LogMinusRationalPenalty
 from invexapi.optim import FISTA
 
 
@@ -26,7 +26,7 @@ def _blur_matrix(n: int, width: int = 5) -> torch.Tensor:
 
 class _DataFidelity(Loss):
     """0.5*||Ax-y||^2. Convex by inspection (A@x is linear), certified here to show
-    a Loss outside invexapi.penalties declaring its own certificate."""
+    a Loss outside invexapi.functions declaring its own certificate."""
 
     def __init__(self, A: torch.Tensor, y: torch.Tensor):
         super().__init__()
@@ -56,7 +56,7 @@ def main():
     y = A @ x_true + noise
 
     smooth = _DataFidelity(A, y)
-    penalty = LogInvexPenalty(lamb=5e-3)
+    penalty = LogMinusRationalPenalty(lamb=5e-3)
 
     L = torch.linalg.eigvalsh(A.T @ A).max().item()
     solver = FISTA(smooth, penalty, step=1.0 / L, max_iter=300, tol=1e-10)

@@ -1,19 +1,27 @@
 import json
 
 from invexapi import metadata
-from invexapi.penalties import Reference
+from invexapi import Reference
 
 _EXPECTED_NAMES = {
     "Loss",
     "Sum",
     "QuasinormInvexPenalty",
     "_QuasinormProx",
-    "LogInvexPenalty",
+    "LogPenalty",
+    "LogMinusRationalPenalty",
     "TikhonovPenalty",
     "Solver",
     "FISTA",
     "NonlinearCG",
     "warn_if_unproven",
+    "FASTA",
+    "frft",
+    "FractionalFourier",
+    "LiftedFrFTAmbiguity",
+    "PSDTracePenalty",
+    "LinearTilt",
+    "SlackAmplitudeLeastSquares",
 }
 
 
@@ -32,7 +40,7 @@ def test_quasinorm_prox_has_provenance():
     entry = next(e for e in metadata.dump_all() if e["name"] == "_QuasinormProx")
 
     assert len(entry["provenance"]) >= 1
-    assert entry["provenance"][0]["files"]
+    assert entry["provenance"][0]["reference"]["title"]
 
 
 def test_tikhonov_certificates_appear_via_example():
@@ -42,7 +50,10 @@ def test_tikhonov_certificates_appear_via_example():
     assert entry["certificates"]["convex"]["status"] == "assumed"
 
 
-def test_reference_still_importable_from_penalties():
-    # Reference moved to invexapi.metadata but must stay available from its
-    # original location for backward compatibility.
-    assert Reference is metadata.Reference
+def test_every_provenance_cites_a_published_reference():
+    # provenance must be verifiable by a reader: a citation, never a file path
+    for entry in metadata.dump_all():
+        for prov in entry["provenance"]:
+            assert "files" not in prov
+            assert prov["reference"] is not None, entry["name"]
+            assert prov["reference"]["title"] and prov["reference"]["year"]
