@@ -1,0 +1,57 @@
+cff-version: 1.2.0
+message: "If you use invexapi, please cite the software and the papers it implements."
+title: invexapi
+type: software
+version: 0.1.3
+license: BSD-3-Clause
+repository-code: "https://github.com/samuelpinilla/invexapi"
+abstract: >-
+  A PyTorch toolkit for invex optimization: functions with optimality
+  certificates, a rule engine that certifies combinations only through
+  published theorems, and generic solvers.
+authors:
+  - family-names: Pinilla
+    given-names: Samuel
+references:
+  - type: conference-paper
+    title: "Improved Imaging by Invex Regularizers with Global Optima Guarantees"
+    authors:
+      - family-names: Pinilla
+        given-names: Samuel
+      - family-names: Mu
+        given-names: Tingting
+      - family-names: Bourne
+        given-names: Neil
+      - family-names: Thiyagalingam
+        given-names: Jeyan
+    collection-title: "Advances in Neural Information Processing Systems"
+    volume: 35
+    start: 10780
+    end: 10794
+    year: 2022
+    url: "https://proceedings.neurips.cc/paper_files/paper/2022/hash/45f7927942098d14e473fc5d000031e2-Abstract.html"
+  - type: conference-paper
+    title: "Global Optimality for Non-linear Constrained Restoration Problems via Invexity"
+    authors:
+      - family-names: Pinilla
+        given-names: Samuel
+      - family-names: Thiyagalingam
+        given-names: Jeyan
+    collection-title: "International Conference on Learning Representations"
+    start: 11990
+    end: 12027
+    year: 2024
+    url: "https://proceedings.iclr.cc/paper_files/paper/2024/hash/3333f5a87d626f8e46af7c4b27363066-Abstract-Conference.html"
+  - type: article
+    title: "What Makes Neural Networks Trainable? Invexity as a Structural Design Principle in AI"
+    authors:
+      - family-names: Pinilla
+        given-names: Samuel
+      - family-names: Sanabria
+        given-names: Ana M.
+      - family-names: Bi
+        given-names: Jia
+      - family-names: Egiazarian
+        given-names: Karen
+    journal: "Research Square (preprint rs-7215670/v1)"
+    year: 2025
