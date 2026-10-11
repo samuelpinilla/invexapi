@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use invexapi, please cite the software and the papers it implements."
 title: invexapi
 type: software
-version: 0.1.3
+version: 0.2.0
 license: BSD-3-Clause
 repository-code: "https://github.com/samuelpinilla/invexapi"
 abstract: >-
