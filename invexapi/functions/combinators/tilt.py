@@ -15,14 +15,13 @@ def _real_inner(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
 @documented(
     decisions=[
         DesignDecision(
-            choice="LinearTilt carries no certificate unless one is attached explicitly",
-            rejected="inheriting the wrapped penalty's certificates",
+            choice="LinearTilt certifies only convexity, derived by rule convex_tilt from a convex base",
+            rejected="inheriting all of the wrapped penalty's certificates",
             rationale=(
-                "a linear tilt preserves convexity but NOT invexity in general "
-                "(adding a linear term can create stationary points that are not "
-                "global minima); no rule for tilts is registered yet, so nothing is "
-                "derived - a convex-tilt rule (convex + linear = convex) would be "
-                "sound and can be added to invexapi.rules when needed"
+                "a linear tilt preserves convexity but NOT invexity or quasi-convexity "
+                "in general (adding a linear term can create stationary points that "
+                "are not global minima); a tilted convex base is convex, hence invex "
+                "via convex_invex, and nothing is derived from an invex-only base"
             ),
         )
     ],

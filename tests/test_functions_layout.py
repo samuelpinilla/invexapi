@@ -7,7 +7,10 @@ def test_catalog_filters_by_certificate():
     convex = set(catalog(convex=True))
 
     assert {functions.LogPenalty, functions.LogMinusRationalPenalty, functions.QuasinormInvexPenalty} <= invex
-    assert convex == {functions.L1Penalty, functions.TikhonovPenalty, functions.PSDTracePenalty}
+    assert convex == {
+        functions.L1Penalty, functions.TikhonovPenalty, functions.PSDTracePenalty, functions.AmplitudeHingeSquared,
+        functions.SymmetricNuclearPenalty,
+    }
     assert convex <= invex  # every certified-convex function here is also certified invex
     assert set(catalog(invex=True, convex=False)) == invex - convex
 

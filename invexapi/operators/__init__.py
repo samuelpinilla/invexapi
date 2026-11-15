@@ -2,7 +2,9 @@ from .algebra import Adjoint, add, compose, scale
 from .base import PROPERTIES, LinearOperator, NonlinearOperator, Operator
 from .differences import FiniteDifference1D, FiniteDifference2D
 from .frft import FractionalFourier, frft, frft_matrix
+from .frog import FROG, LiftedFROG
 from .frft_ambiguity import FrFTAmbiguity, LiftedFrFTAmbiguity, frft_orders
+from .radar_ambiguity import LiftedRadarAmbiguity, RadarAmbiguity, integer_grid
 from .linear import Convolution, Diagonal, Identity, MatrixOperator, Subsample
 from .testing import check_adjoint
 
@@ -21,6 +23,10 @@ __all__ = [
     "FractionalFourier",
     "FrFTAmbiguity",
     "LiftedFrFTAmbiguity",
+    "RadarAmbiguity",
+    "FROG",
+    "LiftedFROG",
+    "LiftedRadarAmbiguity",
     "Adjoint",
     "compose",
     "add",
@@ -29,4 +35,5 @@ __all__ = [
     "frft",
     "frft_matrix",
     "frft_orders",
+    "integer_grid",
 ]

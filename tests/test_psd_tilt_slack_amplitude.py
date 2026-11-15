@@ -35,11 +35,13 @@ def test_psd_value_is_trace_inside_cone_and_inf_outside():
     assert penalty.value(-torch.eye(3, dtype=torch.complex128)).item() == float("inf")
 
 
-def test_psd_certifies_convex_and_tilt_certifies_nothing():
+def test_psd_certifies_convex_and_tilt_keeps_only_convexity():
     base = PSDTracePenalty(lamb=0.1)
     tilted = LinearTilt(base, torch.eye(2, dtype=torch.complex128))
     assert base.convex is not None and base.invex is not None
-    assert tilted.convex is None and tilted.invex is None
+    assert tilted.convex.source == "rule:convex_tilt"
+    assert tilted.invex.source == "rule:convex_invex"
+    assert tilted.quasi_convex.source == "rule:convex_quasi_convex"  # via its convexity
 
 
 def test_tilt_prox_minimizes_tilted_objective():

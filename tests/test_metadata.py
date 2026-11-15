@@ -20,8 +20,11 @@ _EXPECTED_NAMES = {
     "FractionalFourier",
     "LiftedFrFTAmbiguity",
     "PSDTracePenalty",
+    "SymmetricNuclearPenalty",
+    "LiftedFROG",
     "LinearTilt",
     "SlackAmplitudeLeastSquares",
+    "AmplitudeHingeSquared",
 }
 
 

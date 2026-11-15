@@ -35,15 +35,17 @@ invexapi.catalog(invex=True, convex=False) # invex but not certified convex
 | `TikhonovPenalty(lamb)` | `λ/2·‖x‖²` | convex, invex, quasi-convex |
 | `L1Penalty(lamb)` | `λ·‖x‖₁` | convex, invex, quasi-convex |
 | `PSDTracePenalty(lamb)` | `λ·tr(Z) + 𝟙{Z ⪰ 0}` | convex, invex, quasi-convex |
+| `SymmetricNuclearPenalty(lamb)` | `λ·‖Z‖_* + 𝟙{Z = Zᵀ}` | convex, invex, quasi-convex |
 | `Composed(g, H, b)` | `g(Hx − b)` | from rules |
 | `Max(f, h)` | `max(f, h)` | from rules |
-| `LinearTilt(base, c)` | `base(x) − Re⟨c, x⟩` | nothing (attach explicitly) |
+| `LinearTilt(base, c)` | `base(x) − Re⟨c, x⟩` | convex when `base` is (rule `convex_tilt`); never invex alone |
 | `CauchyLoss(delta)` | `log(1 + x²/δ²)` | admissible ⇒ invex; C¹ ([ICLR'24](REFERENCES.md#ref-iclr24) Thm 5) |
 | `GemanMcClureLoss(delta)` | `2x²/(x² + 4δ²)` | admissible ⇒ invex; C¹ ([ICLR'24](REFERENCES.md#ref-iclr24) Thm 5) |
 | `WelschLoss(delta)` | `1 − exp(−x²/(2δ²))` | admissible ⇒ invex; C¹ ([ICLR'24](REFERENCES.md#ref-iclr24) Thm 5) |
 | `AdaptiveRobustLoss(alpha, c)` | Barron-style adaptive loss | admissible ⇒ invex for α ≤ 2; C¹ ([ICLR'24](REFERENCES.md#ref-iclr24) Thm 5) |
 | `SquaredLogMinusRationalLoss()` | `log(1+x²) − x²/(2x²+2)` | admissible ⇒ invex; C¹ ([ICLR'24](REFERENCES.md#ref-iclr24) Thm 5) |
 | `SlackAmplitudeLeastSquares(b, slack)` | `½‖\|z\| + s − b‖²` (smooth term) | nothing (nonconvex) |
+| `AmplitudeHingeSquared(b)` | `½‖max(\|z\| − b, 0)‖²` (smooth term) | convex, C¹ (½·dist² to the disks `\|z\| ≤ b`) |
 
 Both log proxes and the LLq prox return the true global minimiser, including when
 the prox subproblem is nonconvex. The robust losses have value and gradient only
@@ -122,6 +124,8 @@ LevenbergMarquardt through autograd):
 | `FiniteDifference2D` | linear | 2D total-variation gradient |
 | `FractionalFourier` | linear | fast discrete FrFT ([Ozaktas'96](REFERENCES.md#ref-ozaktas96); also the `frft` function) |
 | `LiftedFrFTAmbiguity` | linear | lifted FrFT-based radar ambiguity function `Z -> Tr(B_{α,k} Z)` |
+| `LiftedFROG` | linear | lifted SHG FROG trace `Z -> Tr(B_{τ,k} Z)`, `|·|²` at `Z = xxᵀ` |
+| `FROG` | nonlinear | SHG FROG trace `x -> |Σₙ x[n] x[n+τ] e^{−2πink/N}|²` |
 | `FrFTAmbiguity` | nonlinear | FrFT-based ambiguity function of a signal `x -> A[α,k]` |
 
 Operators combine: `A @ B` (composition), `A + B`, `c * A`, `A.H` (adjoint), and

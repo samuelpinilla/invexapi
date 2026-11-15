@@ -9,6 +9,7 @@ from invexapi.core import Loss, NumericalVerifier
 from invexapi.functions import (
     Composed,
     L1Penalty,
+    LinearTilt,
     LogMinusRationalPenalty,
     LogPenalty,
     Max,
@@ -123,6 +124,18 @@ def test_admissible_2d_tv_is_only_quasi_invex():
     assert c.invex is None
     assert c.quasi_invex.source == "rule:admissible_tv_2d"
     assert Composed(L1Penalty(0.1), FiniteDifference2D()).convex is not None  # TV-L1 is convex
+
+
+# --- linear tilts ----------------------------------------------------------------
+
+
+def test_tilt_of_convex_is_convex_and_of_invex_is_nothing():
+    c = torch.ones(3)
+    tilted = LinearTilt(TikhonovPenalty(1.0), c)
+    assert tilted.convex.source == "rule:convex_tilt"
+    assert tilted.convex.derived_from == (tilted.base.convex,)
+    assert LinearTilt(LogPenalty(0.1), c).convex is None
+    assert LinearTilt(LogPenalty(0.1), c).invex is None  # a tilt can break invexity
 
 
 # --- max and networks -----------------------------------------------------------

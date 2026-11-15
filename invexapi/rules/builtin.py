@@ -113,6 +113,27 @@ register(Rule(
 ))
 
 
+# --- linear tilts: base(x) - Re<c, x> --------------------------------------------
+
+def _tilt_premises(obj):
+    from ..functions.combinators import LinearTilt
+
+    return _all(getattr(obj.base, "convex", None)) if isinstance(obj, LinearTilt) else None
+
+
+register(Rule(
+    name="convex_tilt",
+    produces="convex",
+    statement=(
+        "f convex => f(x) - Re<c, x> convex (a linear function is convex, and the sum of "
+        "convex functions is convex). Convexity only: a tilt keeps neither invexity nor "
+        "quasi-convexity in general"
+    ),
+    reference=Reference(**_BOYD, locator="Sections 3.1.5 (linear functions) and 3.2.1 (nonnegative weighted sums)"),
+    premises=_tilt_premises,
+))
+
+
 # --- composition with a linear map: g(Hx - b) -----------------------------------
 
 def _convex_affine(obj):

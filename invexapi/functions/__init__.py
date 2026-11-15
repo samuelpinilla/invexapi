@@ -10,6 +10,7 @@ from .catalog import catalog
 from .combinators import Composed, LinearTilt, Max, Sum
 from .fidelity import (
     AdaptiveRobustLoss,
+    AmplitudeHingeSquared,
     CauchyLoss,
     GemanMcClureLoss,
     SlackAmplitudeLeastSquares,
@@ -24,7 +25,7 @@ from .separable import (
     QuasinormInvexPenalty,
     TikhonovPenalty,
 )
-from .sets import PSDTracePenalty
+from .sets import PSDTracePenalty, SymmetricNuclearPenalty
 
 __all__ = [
     "catalog",
@@ -35,6 +36,8 @@ __all__ = [
     "QuasinormInvexPenalty",
     "TikhonovPenalty",
     "PSDTracePenalty",
+    "SymmetricNuclearPenalty",
+    "AmplitudeHingeSquared",
     "SlackAmplitudeLeastSquares",
     "CauchyLoss",
     "GemanMcClureLoss",
