@@ -21,21 +21,21 @@ _FROG_REFERENCE = Reference(
 
 def _grids(
     n: int,
-    delays: Optional[Sequence[float]],
-    frequencies: Optional[Sequence[float]],
+    delays: Optional[Sequence[float] | torch.Tensor],
+    frequencies: Optional[Sequence[float] | torch.Tensor],
     dtype: torch.dtype,
     device: Optional[torch.device],
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """Delay/frequency grids plus the factors ``D[tau, l] = e^{+2 pi i l tau / n}``
     (centred frequencies ``l in [-n/2, n/2)``, an advance ``x[n + tau]``) and
     ``E[k, m] = e^{-2 pi i m k / n}``."""
-    delays = integer_grid(n) if delays is None else torch.as_tensor(delays, dtype=torch.float64)
-    frequencies = integer_grid(n) if frequencies is None else torch.as_tensor(frequencies, dtype=torch.float64)
+    delay_grid = integer_grid(n) if delays is None else torch.as_tensor(delays, dtype=torch.float64)
+    frequencies_grid = integer_grid(n) if frequencies is None else torch.as_tensor(frequencies, dtype=torch.float64)
     freqs = torch.fft.fftfreq(n, d=1.0 / n, dtype=torch.float64)
     time = torch.arange(n, dtype=torch.float64)
-    D = torch.exp(2j * torch.pi * torch.outer(delays, freqs) / n).to(dtype=dtype, device=device)
-    E = torch.exp(-2j * torch.pi * torch.outer(frequencies, time) / n).to(dtype=dtype, device=device)
-    return delays, frequencies, D, E
+    D = torch.exp(2j * torch.pi * torch.outer(delay_grid, freqs) / n).to(dtype=dtype, device=device)
+    E = torch.exp(-2j * torch.pi * torch.outer(frequencies_grid, time) / n).to(dtype=dtype, device=device)
+    return delay_grid, frequencies_grid, D, E
 
 
 def _abs2(z: torch.Tensor) -> torch.Tensor:
@@ -107,8 +107,8 @@ class LiftedFROG(LinearOperator):
     def __init__(
         self,
         n: int,
-        delays: Optional[Sequence[float]] = None,
-        frequencies: Optional[Sequence[float]] = None,
+        delays: Optional[Sequence[float] | torch.Tensor] = None,
+        frequencies: Optional[Sequence[float] | torch.Tensor] = None,
         dtype: torch.dtype = torch.complex128,
         device: Optional[torch.device] = None,
     ):
@@ -177,8 +177,8 @@ class FROG(NonlinearOperator):
     def __init__(
         self,
         n: int,
-        delays: Optional[Sequence[float]] = None,
-        frequencies: Optional[Sequence[float]] = None,
+        delays: Optional[Sequence[float] | torch.Tensor] = None,
+        frequencies: Optional[Sequence[float] | torch.Tensor] = None,
         dtype: torch.dtype = torch.complex128,
         device: Optional[torch.device] = None,
         factors: Optional[tuple[torch.Tensor, torch.Tensor]] = None,

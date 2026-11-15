@@ -7,13 +7,13 @@ top-level import here would be circular.
 
 from __future__ import annotations
 
-from typing import Optional, Sequence
+from typing import Any, Optional, Sequence
 
 from ..certificate import Certificate
 from ..metadata import Reference
 from .base import Rule, register
 
-_BOYD = dict(
+_BOYD: dict[str, Any] = dict(
     authors="Boyd, S. and Vandenberghe, L.",
     title="Convex Optimization",
     venue="Cambridge University Press",
@@ -26,19 +26,19 @@ _HANSON = Reference(
     year=1981,
     locator="invexity definition: convex functions are invex with eta(x, y) = x - y",
 )
-_NEURIPS = dict(
+_NEURIPS: dict[str, Any] = dict(
     authors="Pinilla, Mu, Bourne, Thiyagalingam",
     title="Improved Imaging by Invex Regularizers with Global Optima Guarantees",
     venue="NeurIPS",
     year=2022,
 )
-_ICLR = dict(
+_ICLR: dict[str, Any] = dict(
     authors="Pinilla, S. and Thiyagalingam, J.",
     title="Global Optimality for Non-linear Constrained Restoration Problems via Invexity",
     venue="International Conference on Learning Representations (ICLR)",
     year=2024,
 )
-_LAYERS = dict(
+_LAYERS: dict[str, Any] = dict(
     authors="Pinilla, Sanabria, Bi, Egiazarian",
     title="What Makes Neural Networks Trainable? Invexity as a Structural Design Principle in AI",
     venue="Research Square (preprint)",
